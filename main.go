@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"golang.org/x/build/kubernetes/api"
 	"fmt"
+	"crypto/tls"
 )
 
 type Stream struct {
@@ -19,7 +20,10 @@ func main() {
 	apiAddr := os.Getenv("OPENSHIFT_API_URL")
 	apiToken := os.Getenv("OPENSHIFT_TOKEN")
 
-	client := &http.Client{}
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client := &http.Client{Transport: tr}
 	req, err := http.NewRequest("GET", apiAddr + "/api/v1/events?watch=true", nil)
 	if (err != nil) {
 		log.Fatal("Error while opening connection", err)
