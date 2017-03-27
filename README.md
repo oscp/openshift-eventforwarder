@@ -34,11 +34,11 @@ oc edit clusterPolicy default
 oc adm policy add-cluster-role-to-user ose:eventforwarder system:serviceaccount:sbb-infra:ose-eventforwarder
 ```
 
-Just create a 'oc new-app' from building the dockerfile.
+Just create a 'oc new-app' from building the dockerfile or get it from here [Dockerhub](https://hub.docker.com/r/oscp/openshift-eventforwarder/).
 
 ## Parameters
 **Param**|**Description**|**Example**
 :-----:|:-----:|:-----:
 OPENSHIFT\_API\_URL|Your OpenShift API Url|https://master01.ch:8443
-OPENSHIFT\_TOKEN|The token from the service-account| 
+OPENSHIFT\_TOKEN|The token of the service-account| 
 
