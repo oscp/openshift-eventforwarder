@@ -16,11 +16,11 @@ type Stream struct {
 }
 
 func main() {
-	apiAddr := os.Getenv("OSE_API_ADDR")
-	apiToken := os.Getenv("OSE_TOKEN")
+	apiAddr := os.Getenv("OPENSHIFT_API_URL")
+	apiToken := os.Getenv("OPENSHIFT_TOKEN")
 
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", "https://" + apiAddr + "/api/v1/events?watch=true", nil)
+	req, err := http.NewRequest("GET", apiAddr + "/api/v1/events?watch=true", nil)
 	if (err != nil) {
 		log.Fatal("Error while opening connection", err)
 	}
