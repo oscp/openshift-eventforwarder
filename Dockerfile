@@ -1,4 +1,4 @@
-FROM golang:1.8-alpine
+FROM golang:1.7-wheezy
 
 WORKDIR /go/src/github.com/oscp/ose-event-forwarder
 
