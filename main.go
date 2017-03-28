@@ -49,9 +49,9 @@ func main() {
 			log.Fatal("Error decoding json", err)
 		}
 
-		fmt.Printf("%v | Project: %v, Time: %v | Name: %v | Kind: %v | Reason: %v | Message: %v\n",
-			time.Now().UTC().Format(time.RFC3339),
-			event.Event.Namespace, event.Event.LastTimestamp, event.Event.Name,
+		fmt.Printf("%v | Project: %v | Name: %v | Kind: %v | Reason: %v | Message: %v\n",
+			event.Event.LastTimestamp,
+			event.Event.Namespace, event.Event.Name,
 			event.Event.Kind, event.Event.Reason, event.Event.Message)
 	}
 }
