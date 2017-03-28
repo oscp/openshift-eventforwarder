@@ -9,7 +9,6 @@ import (
 	"golang.org/x/build/kubernetes/api"
 	"fmt"
 	"crypto/tls"
-	"time"
 )
 
 type Stream struct {
