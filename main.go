@@ -37,7 +37,7 @@ func main() {
 		if err != nil {
 			log.Println("## Error while connecting to:", apiAddr, err)
 			time.Sleep(5 * time.Second)
-			break
+			continue
 		}
 
 		reader := bufio.NewReader(resp.Body)
@@ -46,14 +46,14 @@ func main() {
 			line, err := reader.ReadBytes('\n')
 			if err != nil {
 				log.Println("## Error reading from response stream.", err)
-				break
+				continue
 			}
 
 			event := Stream{}
 			decErr := json.Unmarshal(line, &event)
 			if decErr != nil {
 				log.Println("## Error decoding json", err)
-				break
+				continue
 			}
 
 			fmt.Printf("%v | Project: %v | Name: %v | Kind: %v | Reason: %v | Message: %v\n",
