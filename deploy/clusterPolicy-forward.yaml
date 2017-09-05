@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: ose:eventforwarder
+rules:
+- apiGroups: null
+  attributeRestrictions: null
+  resources:
+  - events
+  verbs:
+  - get
+  - list
+  - watch

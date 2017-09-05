@@ -1,0 +1,37 @@
+---
+  kind: "DeploymentConfig"
+  apiVersion: "v1"
+  metadata:
+    name: "ose-eventforwarder"
+  spec:
+    template:
+      metadata:
+        labels:
+          name: "ose-eventforwarder"
+      spec:
+        containers:
+          -
+            name: "ose-eventforwarder"
+            image: >-
+              <your docker registry here>
+            env:
+            - name: SYSLOG_SERVER
+              valueFrom:
+                configMapKeyRef:
+                  name: forward-config
+                  key: syslog.server
+            - name: SYSLOG_TAG
+              valueFrom:
+                configMapKeyRef:
+                  name: forward-config
+                  key: syslog.tag
+            command: ["/app/ose-event-forwarder", "" ]
+        serviceAccount: ose-eventforwarder
+        nodeSelector:
+            type: "infra"
+    replicas: 1
+    triggers:
+      -
+        type: "ConfigChange"
+    strategy:
+      type: "Rolling"
