@@ -3,7 +3,7 @@ We at [@SchweizerischeBundesbahnen](https://github.com/SchweizerischeBundesbahne
 So this tools just attaches to the kubernetes API and logs all the events to console where they are grabbed and sent to our central logging environment.
 
 # Syslog forwarding
-If SYSLOG_SERVER is defined, we will forward the logs the the syslog server instead of sending the events to the console
+The standard mode for this applicaiton is to write to standard out.  If you wish to send to Syslog instead, you can define SYSLOG_SERVER as an environment variable, and we will forward the logs the the syslog server instead of sending the events to the console/standard out.  If you wish to send to both a syslog server as well as standard out, you can define the DEBUG environment variable and it will send to both standard out and the defined syslog server.
 
 # Installation
 ```bash

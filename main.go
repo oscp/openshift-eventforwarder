@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"crypto/tls"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -58,7 +59,7 @@ func main() {
 		log.Print("Missing environment variable OPENSHIFT_API_URL. Using default API URL")
 	}
 	if apiToken == "" {
-		// if we dont set it in the environmetn, why not read it out of
+		// if we dont set it in the environment variable, read it out of
 		// /var/run/secrets/kubernetes.io/serviceaccount/token
 		log.Print("Missing environment variable OPENSHIFT_TOKEN. Leveraging serviceaccount token")
 		fileData, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/token")
@@ -154,9 +155,10 @@ func main() {
 				resp.Body.Close()
 				break
 			}
-			// using "|" to seperate each field for easy parsing by log analyzers
-			log.Printf("| Project: %v | Time: %v | Name: %v | Kind: %v | Reason: %v | Message: %v",
-				event.Event.Namespace, event.Event.LastTimestamp, event.Event.Name,
+
+			fmt.Printf("%v | Project: %v | Name: %v | Kind: %v | Reason: %v | Message: %v\n",
+				event.Event.LastTimestamp,
+				event.Event.Namespace, event.Event.Name,
 				event.Event.Kind, event.Event.Reason, event.Event.Message)
 		}
 	}
