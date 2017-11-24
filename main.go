@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	"golang.org/x/build/kubernetes/api"
+	"github.com/patrickmn/go-cache"
 )
 
 // Stream : structure for holding the stream of data coming from OpenShift
@@ -46,7 +47,7 @@ func main() {
 			syscall.SIGSEGV, // FullDerp
 			syscall.SIGABRT, // Abnormal termination
 			syscall.SIGILL,  // illegal instruction
-			syscall.SIGFPE)  // floating point
+			syscall.SIGFPE) // floating point
 		sig := <-c
 		log.Fatalf("Signal (%v) Detected, Shutting Down", sig)
 	}()
@@ -69,21 +70,20 @@ func main() {
 		apiToken = string(fileData)
 	}
 	if syslogTag == "" {
-		// we dont need to error out here, but we do need to set a default if the variable isnt defined
+		// we don't need to error out here, but we do need to set a default if the variable isn't defined
 		syslogTag = "OSE"
 	}
 	if ignoreSSL == "" {
-		// we dont need to error out here, but we do need to set a default if the variable isnt defined
+		// we don't need to error out here, but we do need to set a default if the variable isn't defined
 		ignoreSSL = "FALSE"
 	}
 	if debugFlag == "" {
-		// we dont need to error out here, but we do need to set a default if the variable isnt defined
+		// we don't need to error out here, but we do need to set a default if the variable isn't defined
 		debugFlag = "FALSE"
 	}
 	if (syslogProto == "") || (syslogProto == "tcp") || (syslogProto == "udp") {
-		// we dont need to error out here, but we do need to set a default if the variable isnt defined
+		// we don't need to error out here, but we do need to set a default if the variable isn't defined
 		if syslogProto == "" {
-			log.Print("SYSLOG_PROTO not set, defaulting to udp")
 			syslogProto = "udp"
 		} else {
 			log.Printf("Will use %s for syslog protocol", syslogProto)
@@ -129,6 +129,9 @@ func main() {
 	}
 	req.Header.Add("Authorization", "Bearer "+apiToken)
 
+	// Cache last sent line for each container to avoid duplicates from OSE API
+	c := cache.New(30 * time.Second, 10 * time.Minute)
+
 	for {
 		resp, err := client.Do(req)
 
@@ -143,7 +146,7 @@ func main() {
 		for {
 			line, err := reader.ReadBytes('\n')
 			if err != nil {
-				log.Println("## Error reading from response stream.", err)
+				log.Println("## Error reading from response stream.", err, line)
 				resp.Body.Close()
 				break
 			}
@@ -156,11 +159,40 @@ func main() {
 				break
 			}
 
-			fmt.Printf("%v | Project: %v | Name: %v | Kind: %v | Reason: %v | Message: %v\n",
-				event.Event.LastTimestamp.Format(time.RFC3339),
-				event.Event.Namespace, event.Event.Name,
-				event.Event.Kind, event.Event.Reason, event.Event.Message)
+			key := event.Event.Namespace + "/" + event.Event.Name
+
+			// Check if in cache
+			logEvent := true
+			if last, found := c.Get(key); found {
+				logEvent = shouldLog(last.(api.Event), event.Event)
+			}
+
+			if logEvent {
+				// Cache the last event per pod for 30 seconds
+				c.Set(key, event.Event, cache.DefaultExpiration)
+
+				fmt.Printf("%v | Project: %v | Name: %v | Kind: %v | Reason: %v | Message: %v\n",
+					event.Event.LastTimestamp.Format(time.RFC3339),
+					event.Event.Namespace, event.Event.Name,
+					event.Event.Kind, event.Event.Reason, event.Event.Message)
+			}
+		}
+	}
+}
+
+func shouldLog(last api.Event, current api.Event) bool {
+	if current.LastTimestamp.Time.After(last.LastTimestamp.Time) {
+		return true
+	}
+
+	// If it is the same timestamp, see if the message was already sent
+	if current.LastTimestamp.Time.Equal(last.LastTimestamp.Time) {
+		if current.Message == last.Message {
+			return false
+		} else {
+			return true
 		}
 	}
 
+	return true
 }
