@@ -35,3 +35,4 @@ SYSLOG\_SERVER|The address and port of the target syslog server|syslogserver.cor
 SYSLOG\_PROTO|Select tcp or udp for protocol. Defaults to udp if not defined| tcp
 SYSLOG\_TAG|Tag to send to syslog identifying the source. Defaults to OSE if not defined| OSE\_CORP
 DEBUG|Set to send to both standardout and syslog server. Defaults to FALSE | FALSE or TRUE
+IGNORE\_SSL|Enable or disable SSL/TLS for the master api|Defaults to FALSE
