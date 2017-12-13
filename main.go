@@ -128,9 +128,6 @@ func main() {
 	}
 	req.Header.Add("Authorization", "Bearer "+apiToken)
 
-	// Start out with only never events than now
-	lastLogged := time.Now()
-
 	for {
 		resp, err := client.Do(req)
 
@@ -140,6 +137,7 @@ func main() {
 			continue
 		}
 
+		streamStart := time.Now()
 		reader := bufio.NewReader(resp.Body)
 
 		for {
@@ -158,9 +156,8 @@ func main() {
 				break
 			}
 
-			// Kube API reports all logs in OpenShift, we only want the new ones
-			if event.Event.LastTimestamp.After(lastLogged) {
-				lastLogged = event.Event.LastTimestamp.Time
+			// Kubernetes sends all data from ETCD, we only want the logs since the stream started
+			if event.Event.LastTimestamp.Time.After(streamStart) {
 				fmt.Printf("%v | Project: %v | Name: %v | Kind: %v | Reason: %v | Message: %v\n",
 					event.Event.LastTimestamp.Format(time.RFC3339),
 					event.Event.Namespace, event.Event.Name,
