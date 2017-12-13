@@ -20,7 +20,6 @@ import (
 	"strings"
 
 	"golang.org/x/build/kubernetes/api"
-	"github.com/patrickmn/go-cache"
 )
 
 // Stream : structure for holding the stream of data coming from OpenShift
@@ -47,7 +46,7 @@ func main() {
 			syscall.SIGSEGV, // FullDerp
 			syscall.SIGABRT, // Abnormal termination
 			syscall.SIGILL,  // illegal instruction
-			syscall.SIGFPE) // floating point
+			syscall.SIGFPE)  // floating point
 		sig := <-c
 		log.Fatalf("Signal (%v) Detected, Shutting Down", sig)
 	}()
@@ -129,8 +128,8 @@ func main() {
 	}
 	req.Header.Add("Authorization", "Bearer "+apiToken)
 
-	// Cache last sent line for each container to avoid duplicates from OSE API
-	c := cache.New(30 * time.Second, 10 * time.Minute)
+	// Start out with only never events than now
+	lastLogged := time.Now()
 
 	for {
 		resp, err := client.Do(req)
@@ -159,18 +158,9 @@ func main() {
 				break
 			}
 
-			key := event.Event.Namespace + "/" + event.Event.Name
-
-			// Check if in cache
-			logEvent := true
-			if last, found := c.Get(key); found {
-				logEvent = shouldLog(last.(api.Event), event.Event)
-			}
-
-			if logEvent {
-				// Cache the last event per pod for 30 seconds
-				c.Set(key, event.Event, cache.DefaultExpiration)
-
+			// Kube API reports all logs in OpenShift, we only want the new ones
+			if event.Event.LastTimestamp.After(lastLogged) {
+				lastLogged = event.Event.LastTimestamp.Time
 				fmt.Printf("%v | Project: %v | Name: %v | Kind: %v | Reason: %v | Message: %v\n",
 					event.Event.LastTimestamp.Format(time.RFC3339),
 					event.Event.Namespace, event.Event.Name,
@@ -178,21 +168,4 @@ func main() {
 			}
 		}
 	}
-}
-
-func shouldLog(last api.Event, current api.Event) bool {
-	if current.LastTimestamp.Time.After(last.LastTimestamp.Time) {
-		return true
-	}
-
-	// If it is the same timestamp, see if the message was already sent
-	if current.LastTimestamp.Time.Equal(last.LastTimestamp.Time) {
-		if current.Message == last.Message {
-			return false
-		} else {
-			return true
-		}
-	}
-
-	return true
 }
