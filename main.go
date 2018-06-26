@@ -160,7 +160,7 @@ func main() {
 			if event.Event.LastTimestamp.Time.After(streamStart) {
 				fmt.Printf("%v | Project: %v | Name: %v | Kind: %v | Reason: %v | Message: %v\n",
 					event.Event.LastTimestamp.Format(time.RFC3339),
-					event.Event.Namespace, event.Event.Name,
+					event.Event.Namespace, event.Event.InvolvedObject.Name,
 					event.Event.Kind, event.Event.Reason, event.Event.Message)
 			}
 		}
